@@ -28,9 +28,9 @@ class SpotiPiGUI(QWidget):
 
         combo = QComboBox(self)
         combo.addItem("")
-        combo.addItem("decades")
-        combo.addItem("pop")
         combo.addItem("hiphop")
+        combo.addItem("pop")
+        combo.addItem("decades")
         combo.addItem("jazz")
 
         combo.move(50, 50)
