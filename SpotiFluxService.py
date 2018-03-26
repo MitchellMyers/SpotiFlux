@@ -1,6 +1,3 @@
-import spotipy
-import credentials
-from spotipy.oauth2 import SpotifyClientCredentials
 import time
 import os
 from pygame import mixer

@@ -1,6 +1,5 @@
 pygame==1.9.3
 numpy==1.13.1
-spotipy==2.4.4
 requests==2.18.4
 Flask_RESTful==0.3.6
 wget==3.2
