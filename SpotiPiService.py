@@ -6,9 +6,10 @@ import os
 from pygame import mixer
 import pygame
 import wget
-from random import *
+from random import choice, shuffle
 from PyQt5.QtWidgets import (QWidget, QLabel,
                              QComboBox, QApplication, QPushButton)
+from SpotifyExtClient import SpotifyCategoryPlaylistsQuery, SpotifyPlaylistTracksQuery
 import sys
 
 
@@ -32,6 +33,32 @@ class SpotiPiGUI(QWidget):
         combo.addItem("pop")
         combo.addItem("decades")
         combo.addItem("jazz")
+        combo.addItem("toplists")
+        combo.addItem("mood")
+        combo.addItem("workout")
+        combo.addItem("chill")
+        combo.addItem("edm_dance")
+        combo.addItem("focus")
+        combo.addItem("rock")
+        combo.addItem("party")
+        combo.addItem("country")
+        combo.addItem("sleep")
+        combo.addItem("latin")
+        combo.addItem("rnb")
+        combo.addItem("romance")
+        combo.addItem("indie_alt")
+        combo.addItem("jazz")
+        combo.addItem("gaming")
+        combo.addItem("classical")
+        combo.addItem("reggae")
+        combo.addItem("metal")
+        combo.addItem("soul")
+        combo.addItem("blues")
+        combo.addItem("funk")
+        combo.addItem("punk")
+        combo.addItem("popculture")
+        combo.addItem("kids")
+        combo.addItem("kpop")
 
         combo.move(50, 50)
 
@@ -49,42 +76,37 @@ class SpotiPiGUI(QWidget):
 
     def runSpotiPi(self):
 
-        client_credentials_manager = SpotifyClientCredentials(client_id=credentials.client_id,
-                                                              client_secret=credentials.client_secret)
-        sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+        spotifyPlayCatClient = SpotifyCategoryPlaylistsQuery()
+        spotifyPlayClient = SpotifyPlaylistTracksQuery()
 
-        playlistsCat = sp.category_playlists(category_id=self.category)
+        playlistsCat = spotifyPlayCatClient.get(category_id=self.category, country='US', limit=50, offset=0)
         totalTracks = []
         finalTracks = []
-        playlists = playlistsCat['playlists']['items']
-        i = 0
-        while (len(totalTracks) < 11) and i < len(playlists):
-            playlist = playlists[i]
-            playId = playlist['id']
-            playOb = sp.user_playlist('spotify', playId)
-            index = randint(0, len(playOb['tracks']['items']) - 1)
-            trackId = playOb['tracks']['items'][index]['track']['id']
-            trackOb = sp.track(trackId)
-            if trackOb['preview_url']:
-                previewUrl = trackOb['preview_url'] + '.mp3'
-                if len(previewUrl.rsplit('.', 1)) == 2 and (trackOb['name'], previewUrl) not in totalTracks:
-                    totalTracks.append((trackOb['name'], previewUrl))
-            shuffle(totalTracks)
 
-        for songName, songUrl in totalTracks:
+        for playlistId in playlistsCat:
+            trackDict = spotifyPlayClient.get(playlist_id=playlistId, limit=100, offset=0)
+            trackPrevUrl, trackName = choice(list(trackDict.items()))
+            trackPrevUrl += '.mp3'
+            if len(trackPrevUrl.rsplit('.', 1)) == 2 and (trackPrevUrl, trackName) not in totalTracks:
+                totalTracks.append((trackPrevUrl, trackName))
+            if len(totalTracks) > 15:
+                break
+        shuffle(totalTracks)
+        for songUrl, songName in totalTracks:
             filename = wget.download(songUrl)
-            finalTracks.append((songName, filename))
+            finalTracks.append((filename, songName))
 
-        for songName, song in finalTracks:
+        for songUrl, songName in finalTracks:
             try:
-                mixer.init(buffer=131072)
-                mixer.music.load(song)
-                time.sleep(3)
+                mixer.init()
+                mixer.music.load(songUrl)
                 print("\nNow playing... {}".format(songName))
                 mixer.music.play()
                 while pygame.mixer.music.get_busy():
-                    pygame.time.Clock().tick(300)
-                os.remove(song.replace('.mp3', ''))
+                    pygame.time.Clock().tick(31000)
+                mixer.quit()
+                os.remove(songUrl.replace('.mp3', ''))
+                time.sleep(5)
             except:
                 continue
         sys.exit()
